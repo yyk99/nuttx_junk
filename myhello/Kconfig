@@ -1,0 +1,21 @@
+config MYHELLO
+	tristate "My \"Hello, World!\" app"
+	default n
+	---help---
+		Minimal custom NuttX application kept outside the NuttX tree.
+
+if MYHELLO
+
+config MYHELLO_PROGNAME
+	string "Program name"
+	default "myhello"
+
+config MYHELLO_PRIORITY
+	int "Task priority"
+	default 100
+
+config MYHELLO_STACKSIZE
+	int "Stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+endif
