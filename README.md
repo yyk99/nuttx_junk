@@ -7,7 +7,7 @@ Minimal NuttX setup for the Seeed XIAO ESP32C6, with a custom `myhello` app.
 Packages (Ubuntu/Debian):
 
     sudo apt install -y bison flex gperf libncurses5-dev libgmp-dev libmpc-dev libmpfr-dev binutils-dev
-    sudo apt install -y kconfig-frontends-nox picocom python3-venv
+    sudo apt install -y kconfig-frontends-nox screen python3-venv
 
 esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 (installed as
 `esptool`). Install a current one in a Python venv at the repo root (it provides
@@ -57,14 +57,20 @@ Simple Boot is used, so no separate bootloader is needed (image is written at 0x
 
 ## Run
 
-Open the console (exit with Ctrl-A Ctrl-X). Close it before flashing again.
+Open the console with `screen`. Close it before flashing again.
 
-    picocom -b 115200 /dev/ttyACM0
+    screen /dev/ttyACM0 115200
 
-Press Enter (or reset the board) to get the prompt, then:
+Press Enter (or reset the board) to get the prompt, then run the app. It blinks
+the user LED 10 times by default; pass a count to change that:
 
-    nsh> myhello
-    Hello from myhello!
+    nsh> myhello 5
+    Hello from myhello! Blinking LED 5 times
+
+To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
+`k`. Just closing the terminal leaves the session holding the port; list it with
+`screen -ls` and remove it with `screen -X -S <session> quit`.
+`picocom -b 115200 /dev/ttyACM0` (exit with Ctrl-A Ctrl-X) also works.
 
 ## Build a stock sample (without myhello)
 
