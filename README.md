@@ -19,15 +19,20 @@ esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 (installed as
 
 Toolchain: use Espressif's `riscv32-esp-elf` GCC (the apt `gcc-riscv64-unknown-elf`
 has no libc headers and fails with `sys/lock.h: No such file or directory`).
-Download it from https://github.com/espressif/crosstool-NG/releases and put its
-`bin/` directory on `PATH`. If you have the Arduino ESP32 core installed, its copy works:
+Download and unpack it (about 290 MB; verified with this version on x86_64 Linux):
 
-    export PATH=$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin:$PATH
+    mkdir -p ~/tools && cd ~/tools
+    gh release download esp-14.2.0_20260121 -R espressif/crosstool-NG \
+        -p "riscv32-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz"
+    tar xf riscv32-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz
+    export PATH=$HOME/tools/riscv32-esp-elf/bin:$PATH
+
+Without `gh`, download the same file from
+https://github.com/espressif/crosstool-NG/releases/tag/esp-14.2.0_20260121.
+If you have the Arduino ESP32 core installed, its copy also works:
+`$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin`.
 
 Check: `riscv32-esp-elf-gcc --version` and `esptool.py version`.
-
-Note: the standalone toolchain download is untested here; the Arduino toolchain was
-what was actually used. The venv esptool install was verified (5.5.0).
 
 Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 
