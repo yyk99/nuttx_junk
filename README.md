@@ -67,6 +67,11 @@ the user LED 10 times by default; pass a count to change that:
     nsh> myhello 5
     Hello from myhello! Blinking LED 5 times
 
+To restart the board from the prompt (the USB port drops and returns, so reconnect
+`screen` afterwards):
+
+    nsh> reboot
+
 To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
 `k`. Just closing the terminal leaves the session holding the port; list it with
 `screen -ls` and remove it with `screen -X -S <session> quit`.
