@@ -1,0 +1,13 @@
+diff --git a/boards/risc-v/esp32c6/esp32c6-xiao/src/esp32c6_gpio.c b/boards/risc-v/esp32c6/esp32c6-xiao/src/esp32c6_gpio.c
+index 1f66e3d9..88c147a7 100644
+--- a/boards/risc-v/esp32c6/esp32c6-xiao/src/esp32c6_gpio.c
++++ b/boards/risc-v/esp32c6/esp32c6-xiao/src/esp32c6_gpio.c
+@@ -69,7 +69,7 @@
+ 
+ /* Pin 1 is used for this example as GPIO outputs. */
+ 
+-#define GPIO_OUT1  1
++#define GPIO_OUT1  15
+ 
+ #if !defined(CONFIG_ESPRESSIF_GPIO_IRQ) && BOARD_NGPIOINT > 0
+ #  error "NGPIOINT is > 0 and GPIO interrupts aren't enabled"
