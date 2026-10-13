@@ -7,7 +7,7 @@ Minimal NuttX setup for the Seeed XIAO ESP32C6, with a custom `myhello` app.
 Packages (Ubuntu/Debian):
 
     sudo apt install -y bison flex gperf libncurses5-dev libgmp-dev libmpc-dev libmpfr-dev binutils-dev
-    sudo apt install -y kconfig-frontends-nox screen python3-venv
+    sudo apt install -y kconfig-frontends-nox genromfs screen python3-venv
 
 esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 (installed as
 `esptool`). Install a current one in a Python venv at the repo root (it provides
@@ -67,10 +67,24 @@ the user LED 10 times by default; pass a count to change that:
     nsh> myhello 5
     Hello from myhello! Blinking LED 5 times
 
+To restart the board from the prompt (the USB port drops and returns, so reconnect
+`screen` afterwards):
+
+    nsh> reboot
+
 To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
 `k`. Just closing the terminal leaves the session holding the port; list it with
 `screen -ls` and remove it with `screen -X -S <session> quit`.
 `picocom -b 115200 /dev/ttyACM0` (exit with Ctrl-A Ctrl-X) also works.
+
+## Autostart at boot
+
+`myhello` starts automatically after reset: `setup.sh` enables the `/etc` ROMFS and
+patches NuttX's `rcS` startup script (`patches/rcs-autostart-myhello.patch`) to run
+`myhello &`. The boot log shows `rcS file is called!`, the LED blinks 10 times, and the
+NSH prompt stays available (`ps` lists the running `myhello` task). To disable, drop the
+`git apply ...rcs-autostart...` and `-e FS_ROMFS -e ETC_ROMFS` lines from `setup.sh`
+and re-run it.
 
 ## Build a stock sample (without myhello)
 
