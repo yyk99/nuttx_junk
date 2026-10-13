@@ -1,0 +1,16 @@
+diff --git a/arch/risc-v/src/cmake/Toolchain.cmake b/arch/risc-v/src/cmake/Toolchain.cmake
+index 2e0a9614..b3a1a20a 100644
+--- a/arch/risc-v/src/cmake/Toolchain.cmake
++++ b/arch/risc-v/src/cmake/Toolchain.cmake
+@@ -41,8 +41,11 @@ if(CONFIG_ARCH_TOOLCHAIN_CLANG)
+   set(TOOLCHAIN_PREFIX riscv64-unknown-elf)
+ else()
+   find_program(RV_COMPILER riscv-none-elf-gcc)
++  find_program(RV_ESP_COMPILER riscv32-esp-elf-gcc)
+   if(RV_COMPILER)
+     set(TOOLCHAIN_PREFIX riscv-none-elf)
++  elseif(RV_ESP_COMPILER)
++    set(TOOLCHAIN_PREFIX riscv32-esp-elf)
+   else()
+     if(CONFIG_RISCV_TOOLCHAIN_GNU_RV32)
+       set(TOOLCHAIN_PREFIX riscv32-unknown-elf)

@@ -1,0 +1,11 @@
+if(CONFIG_MYHELLO)
+  nuttx_add_application(
+    NAME
+    ${CONFIG_MYHELLO_PROGNAME}
+    SRCS
+    myhello_main.c
+    STACKSIZE
+    ${CONFIG_MYHELLO_STACKSIZE}
+    PRIORITY
+    ${CONFIG_MYHELLO_PRIORITY})
+endif()
