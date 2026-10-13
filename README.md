@@ -36,10 +36,14 @@ installed by Arduino). NuttX also needs `esptool.py` >= 4.8 (apt has 4.7), so
 
 Flash:
 
-    esptool.py --chip esp32c6 -p /dev/ttyACM0 -b 460800 write_flash 0x0 nuttx.bin
+    make flash CROSSDEV=riscv32-esp-elf- ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
 
-If flashing at 0x0 fails, see the Seeed wiki below for the bootloader and offsets.
-Then in the NSH prompt run `myhello`.
+Simple Boot is used, so no separate bootloader is needed (image is written at 0x0).
+Then open the console (`picocom -b 115200 /dev/ttyACM0`) and run `myhello` at the
+NSH prompt; it prints `Hello from myhello!`.
+
+If the build fails with stale dependency paths after switching compilers, remove
+`myhello/.built`, `.depend`, `Make.dep` and `*.o`, then run `make clean`.
 
 ## See also
 
