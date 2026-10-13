@@ -7,25 +7,27 @@ Minimal NuttX setup for the Seeed XIAO ESP32C6, with a custom `myhello` app.
 Packages (Ubuntu/Debian):
 
     sudo apt install -y bison flex gperf libncurses5-dev libgmp-dev libmpc-dev libmpfr-dev binutils-dev
-    sudo apt install -y kconfig-frontends-nox picocom pipx
+    sudo apt install -y kconfig-frontends-nox picocom python3-venv
 
-esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 and installs the
-command as `esptool`. Install a current one with pipx and add the `.py` name:
+esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 (installed as
+`esptool`). Install a current one in a Python venv at the repo root (it provides
+`esptool.py`) and activate it in every shell you build from:
 
-    pipx install esptool
-    ln -s ~/.local/bin/esptool ~/.local/bin/esptool.py
+    python3 -m venv .venv
+    .venv/bin/pip install esptool
+    source .venv/bin/activate
 
 Toolchain: use Espressif's `riscv32-esp-elf` GCC (the apt `gcc-riscv64-unknown-elf`
 has no libc headers and fails with `sys/lock.h: No such file or directory`).
 Download it from https://github.com/espressif/crosstool-NG/releases and put its
 `bin/` directory on `PATH`. If you have the Arduino ESP32 core installed, its copy works:
 
-    export PATH=$HOME/.local/bin:$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin:$PATH
+    export PATH=$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin:$PATH
 
 Check: `riscv32-esp-elf-gcc --version` and `esptool.py version`.
 
-Note: the pipx and standalone-toolchain steps are untested here; the Arduino
-toolchain with Arduino's esptool 5.x was what was actually used.
+Note: the standalone toolchain download is untested here; the Arduino toolchain was
+what was actually used. The venv esptool install was verified (5.5.0).
 
 Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 
