@@ -2,7 +2,8 @@
 # Link the custom app into the NuttX apps tree and configure the build.
 set -e
 top=$(cd "$(dirname "$0")" && pwd)
-ln -sfn "$top/myhello" "$top/nuttxspace/apps/myhello"
+rm -f "$top/nuttxspace/apps/myhello"
+ln -sfn "$top/myhello" "$top/nuttxspace/apps/external"
 cd "$top/nuttxspace/nuttx"
 git checkout boards/risc-v/esp32c6/esp32c6-xiao/src/esp32c6_gpio.c \
     boards/risc-v/esp32c6/common/src/etc/init.d/rcS

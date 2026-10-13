@@ -43,7 +43,7 @@ Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 ## Build and flash the myhello app
 
 The app lives in `myhello/` (outside the NuttX tree). `setup.sh` symlinks it
-into `nuttxspace/apps/`, configures `esp32c6-xiao:usbnsh` and enables `CONFIG_MYHELLO`.
+into `nuttxspace/apps/external` (the hook NuttX's CMake and Make builds both pick up), configures `esp32c6-xiao:usbnsh` and enables `CONFIG_MYHELLO`.
 
     ./setup.sh
     cd nuttxspace/nuttx
@@ -76,6 +76,28 @@ To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
 `k`. Just closing the terminal leaves the session holding the port; list it with
 `screen -ls` and remove it with `screen -X -S <session> quit`.
 `picocom -b 115200 /dev/ttyACM0` (exit with Ctrl-A Ctrl-X) also works.
+
+## Build with CMake
+
+`setup_cmake.sh` does the same configuration with CMake and Ninja; the output goes to
+`nuttxspace/build/` (the first run takes about 5 minutes because it fetches the ESP HAL).
+It needs `cmake`, `ninja-build` and `kconfiglib` (in the venv) in addition to the above:
+
+    sudo apt install -y cmake ninja-build
+    source .venv/bin/activate
+    pip install kconfiglib
+    export PATH=<toolchain>/bin:$PATH
+    ./setup_cmake.sh
+
+Flash the result (this does not use `make flash`):
+
+    esptool.py --chip esp32c6 -p /dev/ttyACM0 -b 921600 write_flash 0x0 nuttxspace/build/nuttx.bin
+
+Notes: `patches/cmake-esp-toolchain.patch` teaches NuttX's CMake the `riscv32-esp-elf`
+compiler prefix (it only knows `riscv-none-elf` and `riscv64-unknown-elf`). CMake refuses
+an in-tree `.config`, so the script runs `make distclean` first; after that run
+`./setup.sh` again to go back to the Make build. The CMake image was flashed and
+verified on the board (autostart and LED blink).
 
 ## Autostart at boot
 
