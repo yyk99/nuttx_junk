@@ -1,0 +1,10 @@
+diff --git a/boards/risc-v/esp32c6/common/src/etc/init.d/rcS b/boards/risc-v/esp32c6/common/src/etc/init.d/rcS
+index 2a2fa63c..46745b87 100644
+--- a/boards/risc-v/esp32c6/common/src/etc/init.d/rcS
++++ b/boards/risc-v/esp32c6/common/src/etc/init.d/rcS
+@@ -27,3 +27,5 @@
+  */
+ 
+ echo "rcS file is called!"
++
++myhello &
