@@ -1,0 +1,12 @@
+# K&R style for C files: attached braces, function braces on their own line
+BasedOnStyle: LLVM
+Language: Cpp
+BreakBeforeBraces: Linux
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 80
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+SortIncludes: Never

@@ -1,0 +1,3 @@
+ifneq ($(CONFIG_MYHELLO),)
+CONFIGURED_APPS += $(APPDIR)/myhello
+endif
