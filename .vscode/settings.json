@@ -6,5 +6,6 @@
         "nuttx",
         "nuttxspace",
         "myhello"
-    ]
+    ],
+    "cmake.sourceDirectory": "/home/yyk/src/nuttx_junk/myhello"
 }

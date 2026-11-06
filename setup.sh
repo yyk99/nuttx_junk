@@ -13,6 +13,11 @@ fi
 boarddir=$top/boards/$board
 . "$boarddir/board.conf"    # NUTTX_CONFIG, CROSSDEV, KCONFIG_TWEAKS
 
+if ! command -v "${CROSSDEV}gcc" >/dev/null; then
+    echo "${CROSSDEV}gcc not found in PATH; see boards/$board/README.md (Toolchain)" >&2
+    exit 1
+fi
+
 # NuttX's Make and CMake builds both pick up apps/external automatically
 rm -f "$top/nuttxspace/apps/myhello"
 ln -sfn "$top/myhello" "$top/nuttxspace/apps/external"
@@ -21,7 +26,9 @@ cd "$top/nuttxspace/nuttx"
 # Drop patches left by a previously configured board
 git checkout -q .
 # CMake refuses an in-tree .config left over from a Make build
-make distclean || rm -f .config Make.defs
+# (quiet: distclean of another arch's config complains about a missing compiler)
+echo "Cleaning the previous configuration"
+make distclean >/dev/null 2>&1 || rm -f .config Make.defs
 
 patches=$(ls "$boarddir"/patches/*.patch 2>/dev/null || true)
 [ "$mode" = cmake ] && patches="$patches $(ls "$boarddir"/patches/cmake/*.patch 2>/dev/null || true)"

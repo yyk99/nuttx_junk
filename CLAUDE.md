@@ -23,7 +23,7 @@ flash and run steps.
 
 ## Build and flash
 
-    source .venv/bin/activate
+    source .venv/bin/activate    # ESP boards only (esptool)
     export PATH=<toolchain>/bin:$PATH
     ./setup.sh <board>
     cd nuttxspace/nuttx

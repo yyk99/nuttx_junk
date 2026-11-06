@@ -25,7 +25,7 @@ int main(int argc, FAR char *argv[])
     int fd = open(CONFIG_MYHELLO_GPIO_DEVPATH, O_RDWR);
     int i;
 
-    printf("Hello from myhello! Blinking LED %d times\n", count);
+    printf("Hello from myhello!\nBlinking LED %d times\n", count);
 
     if (fd < 0) {
         printf("Cannot open %s (is CONFIG_DEV_GPIO enabled?)\n",

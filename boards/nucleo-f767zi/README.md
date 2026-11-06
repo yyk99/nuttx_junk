@@ -5,6 +5,24 @@ inputs first, then the outputs (LD1-LD3 are `gpio4`-`gpio6`). `board.conf` sets
 `CONFIG_MYHELLO_GPIO_DEVPATH` accordingly and turns `CONFIG_MYHELLO_LED_ACTIVE_LOW` off. It also disables
 `CONFIG_ARCH_LEDS`; otherwise the kernel uses LD1-LD3 as status LEDs and overrides `myhello`. No NuttX patches are needed.
 
+## kestrel
+
+```
+cd ~/src/nuttx_junk
+./setup.sh nucleo-f767zi
+cd nuttxspace/nuttx
+make -j $(nproc) CROSSDEV=arm-none-eabi-
+
+printf 'r\nh\nloadbin nuttx.bin 0x08000000\nr\ng\nexit\n' > /tmp/flash.jlink
+JLINK=$(ls /opt/st/stm32cubeide_*/plugins/*externaltools.jlink.linux64_*/tools/bin/JLinkExe)
+$JLINK -device STM32F767ZI -if SWD -speed 4000 -autoconnect 1 -NoGui 1 -ExitOnError 1 -CommandFile /tmp/flash.jlink
+```
+Then the console (close it before flashing again). Press Enter for the prompt:
+```
+screen /dev/ttyACM0 115200
+nsh> myhello 5
+```
+
 ## Toolchain
 
 `arm-none-eabi-gcc` (apt `gcc-arm-none-eabi`). Tested with 13.2.1.
@@ -15,7 +33,8 @@ inputs first, then the outputs (LD1-LD3 are `gpio4`-`gpio6`). `board.conf` sets
     cd nuttxspace/nuttx
     make -j CROSSDEV=arm-none-eabi-
 
-The image is `nuttxspace/nuttx/nuttx.bin` (flash address 0x08000000).
+The image is `nuttxspace/nuttx/nuttx.bin` (flash address 0x08000000). Configuring another
+board with `setup.sh` removes it, so flash before you switch.
 
 ## Flash
 

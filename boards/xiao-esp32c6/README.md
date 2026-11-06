@@ -3,6 +3,40 @@
 NuttX config `esp32c6-xiao:usbnsh`. `myhello` blinks the user LED (GPIO15, active
 low) and starts at boot.
 
+## kestrel (make)
+```
+cd ~/src/nuttx_junk
+source .venv/bin/activate
+export PATH=$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin:$PATH
+
+./setup.sh xiao-esp32c6
+cd nuttxspace/nuttx
+make -j $(nproc) CROSSDEV=riscv32-esp-elf-
+make flash CROSSDEV=riscv32-esp-elf- ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
+```
+Then open the console and run the app (press Enter for the prompt):
+```
+screen /dev/ttyACM0 115200
+nsh> myhello 5
+```
+
+## kestrel (CMake)
+```
+cd ~/src/nuttx_junk
+source .venv/bin/activate
+export PATH=$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin:$PATH
+
+sudo apt install -y cmake ninja-build      # once; skip if already installed
+./setup.sh xiao-esp32c6 cmake
+
+esptool.py --chip esp32c6 -p /dev/ttyACM0 -b 921600 write_flash 0x0 nuttxspace/build/nuttx.bin
+```
+Then the console (press Enter for the prompt):
+```
+screen /dev/ttyACM0 115200
+nsh> myhello 5
+```
+
 ## Toolchain
 
 Use Espressif's `riscv32-esp-elf` GCC (the apt `gcc-riscv64-unknown-elf` has no libc
@@ -20,18 +54,41 @@ If you have the Arduino ESP32 core installed, its copy also works:
 `$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin`.
 
 Check: `riscv32-esp-elf-gcc --version` and `esptool.py version` (needs the venv).
+The `export PATH=...` lines below only last for the current shell; add one to `~/.bashrc`
+to keep it.
+
+## esptool
+
+NuttX needs `esptool.py` >= 4.8 to build and flash the image, but apt only has 4.7.
+Install a current one in a Python venv at the repo root (it also holds `kconfiglib`
+for the CMake build) and activate it in every shell you build from:
+
+    sudo apt install -y python3-venv
+    python3 -m venv .venv
+    .venv/bin/pip install esptool kconfiglib
+    source .venv/bin/activate
 
 ## Build and flash (Make)
 
+Every new shell needs the toolchain on `PATH` and the venv active (for `esptool.py`).
+`setup.sh` stops with "riscv32-esp-elf-gcc not found in PATH" otherwise.
+
+    source .venv/bin/activate
+    export PATH=$HOME/tools/riscv32-esp-elf/bin:$PATH     # or the Arduino copy, see Toolchain
     ./setup.sh xiao-esp32c6
     cd nuttxspace/nuttx
     make -j CROSSDEV=riscv32-esp-elf-
 
-Flash (board on `/dev/ttyACM0`; you need to be in the `dialout` group):
+Flash (board on `/dev/ttyACM0`; you need to be in the `dialout` group, and the
+console must be closed):
 
     make flash CROSSDEV=riscv32-esp-elf- ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
 
 Simple Boot is used, so no separate bootloader is needed (image is written at 0x0).
+The image is `nuttxspace/nuttx/nuttx.bin` (Make) or `nuttxspace/build/nuttx.bin` (CMake);
+configuring another board with `setup.sh` removes it.
+If the port is missing or the flash cannot connect, replug the board (hold BOOT while
+plugging it in for download mode).
 
 ## Run
 
@@ -50,14 +107,11 @@ To restart the board from the prompt (the USB port drops and returns, so reconne
 
     nsh> reboot
 
-To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
-`k`. Just closing the terminal leaves the session holding the port; list it with
-`screen -ls` and remove it with `screen -X -S <session> quit`.
-`picocom -b 115200 /dev/ttyACM0` (exit with Ctrl-A Ctrl-X) also works.
-
 ## Build with CMake
 
     sudo apt install -y cmake ninja-build
+    source .venv/bin/activate                         # needs kconfiglib and esptool
+    export PATH=$HOME/tools/riscv32-esp-elf/bin:$PATH
     ./setup.sh xiao-esp32c6 cmake
 
 The output goes to `nuttxspace/build/` (the first run takes about 5 minutes because it

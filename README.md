@@ -18,14 +18,10 @@ console steps.
 Packages (Ubuntu/Debian):
 
     sudo apt install -y bison flex gperf libncurses5-dev libgmp-dev libmpc-dev libmpfr-dev binutils-dev
-    sudo apt install -y kconfig-frontends-nox genromfs screen python3-venv
+    sudo apt install -y kconfig-frontends-nox genromfs screen
 
-Python venv at the repo root (kconfiglib for CMake; `esptool.py` >= 4.8 for the ESP
-board, since apt only has 4.7):
-
-    python3 -m venv .venv
-    .venv/bin/pip install esptool kconfiglib
-    source .venv/bin/activate
+CMake mode (any board) also needs `cmake`, `ninja-build` and `kconfiglib`
+(`pip install kconfiglib`, in a venv or system-wide).
 
 Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 
@@ -35,16 +31,28 @@ Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 
 ## Configure and build
 
+    export PATH=<toolchain>/bin:$PATH    # toolchain of the board (see its README)
     ./setup.sh <board> [make|cmake]      # default: make
     cd nuttxspace/nuttx
     make -j CROSSDEV=<toolchain prefix>  # Make flow; setup.sh prints the exact command
 
-`setup.sh` symlinks `myhello/` into `nuttxspace/apps/external`, resets the NuttX
+`setup.sh` exits early if the board's compiler is not on `PATH`. It symlinks `myhello/` into `nuttxspace/apps/external`, resets the NuttX
 tree (`git checkout .`, so patches from a previously configured board go away),
 runs `make distclean`, applies the board's patches, configures the board and enables
 the options listed in its `board.conf`. In `cmake` mode it also builds with Ninja;
 the image is `nuttxspace/build/nuttx.bin`. Do not keep hand edits in
 `nuttxspace/nuttx`: changes to NuttX go through a patch.
+
+All boards share `nuttxspace/`, so there is one build at a time:
+
+| Mode | Image |
+|------|-------|
+| `make` | `nuttxspace/nuttx/nuttx.bin` (in-tree build) |
+| `cmake` | `nuttxspace/build/nuttx.bin` |
+
+Running `setup.sh` for another board discards the previous board's patches and build
+(`git checkout .`, `make distclean`, and `rm -rf nuttxspace/build` in CMake mode), so
+rebuild after switching back. Flash before you switch.
 
 The `myhello` app drives the user LED through `CONFIG_MYHELLO_GPIO_DEVPATH` (default
 `/dev/gpio0`); `CONFIG_MYHELLO_LED_ACTIVE_LOW` selects the LED polarity. Both are set per
