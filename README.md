@@ -1,38 +1,31 @@
 # Apache NuttX primer and examples
 
-Minimal NuttX setup for the Seeed XIAO ESP32C6, with a custom `myhello` app.
+Minimal NuttX setup with a custom `myhello` app that blinks the user LED. One
+setup script configures NuttX for any of the supported boards.
 
-## Install requirements
+## Boards
+
+| Board | Directory | Toolchain | Autostart |
+|-------|-----------|-----------|-----------|
+| Seeed XIAO ESP32C6 | [boards/xiao-esp32c6](boards/xiao-esp32c6/README.md) | `riscv32-esp-elf` | yes |
+| ST Nucleo-F767ZI | [boards/nucleo-f767zi](boards/nucleo-f767zi/README.md) | `arm-none-eabi` | no |
+
+Each board directory has its own README with the toolchain, build, flash and
+console steps.
+
+## Common requirements
 
 Packages (Ubuntu/Debian):
 
     sudo apt install -y bison flex gperf libncurses5-dev libgmp-dev libmpc-dev libmpfr-dev binutils-dev
     sudo apt install -y kconfig-frontends-nox genromfs screen python3-venv
 
-esptool: NuttX needs `esptool.py` >= 4.8, but apt only has 4.7 (installed as
-`esptool`). Install a current one in a Python venv at the repo root (it provides
-`esptool.py`) and activate it in every shell you build from:
+Python venv at the repo root (kconfiglib for CMake; `esptool.py` >= 4.8 for the ESP
+board, since apt only has 4.7):
 
     python3 -m venv .venv
-    .venv/bin/pip install esptool
+    .venv/bin/pip install esptool kconfiglib
     source .venv/bin/activate
-
-Toolchain: use Espressif's `riscv32-esp-elf` GCC (the apt `gcc-riscv64-unknown-elf`
-has no libc headers and fails with `sys/lock.h: No such file or directory`).
-Download and unpack it (about 290 MB; verified with this version on x86_64 Linux):
-
-    mkdir -p ~/tools && cd ~/tools
-    gh release download esp-14.2.0_20260121 -R espressif/crosstool-NG \
-        -p "riscv32-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz"
-    tar xf riscv32-esp-elf-14.2.0_20260121-x86_64-linux-gnu.tar.xz
-    export PATH=$HOME/tools/riscv32-esp-elf/bin:$PATH
-
-Without `gh`, download the same file from
-https://github.com/espressif/crosstool-NG/releases/tag/esp-14.2.0_20260121.
-If you have the Arduino ESP32 core installed, its copy also works:
-`$HOME/.arduino15/packages/esp32/tools/esp-rv32/2601/bin`.
-
-Check: `riscv32-esp-elf-gcc --version` and `esptool.py version`.
 
 Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
 
@@ -40,82 +33,32 @@ Get the sources (from the root of this repo; `nuttxspace/` is git-ignored):
     git clone --depth=1 https://github.com/apache/nuttx.git nuttxspace/nuttx
     git clone --depth=1 https://github.com/apache/nuttx-apps nuttxspace/apps
 
-## Build and flash the myhello app
+## Configure and build
 
-The app lives in `myhello/` (outside the NuttX tree). `setup.sh` symlinks it
-into `nuttxspace/apps/external` (the hook NuttX's CMake and Make builds both pick up), configures `esp32c6-xiao:usbnsh` and enables `CONFIG_MYHELLO`.
-
-    ./setup.sh
+    ./setup.sh <board> [make|cmake]      # default: make
     cd nuttxspace/nuttx
-    make -j CROSSDEV=riscv32-esp-elf-
+    make -j CROSSDEV=<toolchain prefix>  # Make flow; setup.sh prints the exact command
 
-Flash (board connected on `/dev/ttyACM0`; you need to be in the `dialout` group):
+`setup.sh` symlinks `myhello/` into `nuttxspace/apps/external`, resets the NuttX
+tree (`git checkout .`, so patches from a previously configured board go away),
+runs `make distclean`, applies the board's patches, configures the board and enables
+the options listed in its `board.conf`. In `cmake` mode it also builds with Ninja;
+the image is `nuttxspace/build/nuttx.bin`. Do not keep hand edits in
+`nuttxspace/nuttx`: changes to NuttX go through a patch.
 
-    make flash CROSSDEV=riscv32-esp-elf- ESPTOOL_PORT=/dev/ttyACM0 ESPTOOL_BINDIR=./
+The `myhello` app drives the user LED through `CONFIG_MYHELLO_GPIO_DEVPATH` (default
+`/dev/gpio0`); `CONFIG_MYHELLO_LED_ACTIVE_LOW` selects the LED polarity. Both are set per
+board in `board.conf`.
 
-Simple Boot is used, so no separate bootloader is needed (image is written at 0x0).
+## Adding a board
 
-## Run
-
-Open the console with `screen`. Close it before flashing again.
-
-    screen /dev/ttyACM0 115200
-
-Press Enter (or reset the board) to get the prompt, then run the app. It blinks
-the user LED 10 times by default; pass a count to change that:
-
-    nsh> myhello 5
-    Hello from myhello! Blinking LED 5 times
-
-To restart the board from the prompt (the USB port drops and returns, so reconnect
-`screen` afterwards):
-
-    nsh> reboot
-
-To leave `screen`, press Ctrl-A then `\` (and confirm with `y`), or Ctrl-A then
-`k`. Just closing the terminal leaves the session holding the port; list it with
-`screen -ls` and remove it with `screen -X -S <session> quit`.
-`picocom -b 115200 /dev/ttyACM0` (exit with Ctrl-A Ctrl-X) also works.
-
-## Build with CMake
-
-`setup_cmake.sh` does the same configuration with CMake and Ninja; the output goes to
-`nuttxspace/build/` (the first run takes about 5 minutes because it fetches the ESP HAL).
-It needs `cmake`, `ninja-build` and `kconfiglib` (in the venv) in addition to the above:
-
-    sudo apt install -y cmake ninja-build
-    source .venv/bin/activate
-    pip install kconfiglib
-    export PATH=<toolchain>/bin:$PATH
-    ./setup_cmake.sh
-
-Flash the result (this does not use `make flash`):
-
-    esptool.py --chip esp32c6 -p /dev/ttyACM0 -b 921600 write_flash 0x0 nuttxspace/build/nuttx.bin
-
-Notes: `patches/cmake-esp-toolchain.patch` teaches NuttX's CMake the `riscv32-esp-elf`
-compiler prefix (it only knows `riscv-none-elf` and `riscv64-unknown-elf`). CMake refuses
-an in-tree `.config`, so the script runs `make distclean` first; after that run
-`./setup.sh` again to go back to the Make build. The CMake image was flashed and
-verified on the board (autostart and LED blink).
-
-## Autostart at boot
-
-`myhello` starts automatically after reset: `setup.sh` enables the `/etc` ROMFS and
-patches NuttX's `rcS` startup script (`patches/rcs-autostart-myhello.patch`) to run
-`myhello &`. The boot log shows `rcS file is called!`, the LED blinks 10 times, and the
-NSH prompt stays available (`ps` lists the running `myhello` task). To disable, drop the
-`git apply ...rcs-autostart...` and `-e FS_ROMFS -e ETC_ROMFS` lines from `setup.sh`
-and re-run it.
-
-## Build a stock sample (without myhello)
-
-    cd nuttxspace/nuttx
-    make distclean
-    ./tools/configure.sh esp32c6-xiao:usbnsh
-    make -j CROSSDEV=riscv32-esp-elf-
-
-The `usbnsh` config also includes the stock `hello` command.
+1. Find its NuttX config (`ls nuttxspace/nuttx/boards/*/*/<board>/configs`).
+2. Create `boards/<name>/board.conf` with `NUTTX_CONFIG`, `CROSSDEV` and
+   `KCONFIG_TWEAKS` (see the existing ones).
+3. If the user LED is not `/dev/gpio0` (set `MYHELLO_GPIO_DEVPATH`), or the board needs other NuttX changes, add
+   `boards/<name>/patches/*.patch` (made with `git diff` inside `nuttxspace/nuttx`).
+   Patches in `patches/cmake/` are applied only in `cmake` mode.
+4. Add `boards/<name>/README.md` and a row in the table above.
 
 ## Troubleshooting
 
@@ -123,7 +66,3 @@ The `usbnsh` config also includes the stock `hello` command.
   `.depend`, `Make.dep` and `*.o`, then run `make clean`.
 - `make distclean` can fail on a half-configured tree; `setup.sh` falls back to
   removing `.config` and `Make.defs`.
-
-## See also
-
-https://wiki.seeedstudio.com/xiao_esp32c6_nuttx/

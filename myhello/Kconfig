@@ -14,6 +14,20 @@ config MYHELLO_PRIORITY
 	int "Task priority"
 	default 100
 
+config MYHELLO_GPIO_DEVPATH
+	string "GPIO output device that drives the LED"
+	default "/dev/gpio0"
+	---help---
+		The Nucleo-F767ZI registers its GPIO inputs first, so LD1 is
+		/dev/gpio4 there.
+
+config MYHELLO_LED_ACTIVE_LOW
+	bool "LED on /dev/gpio0 is active low"
+	default y
+	---help---
+		The XIAO ESP32C6 user LED is active low. Disable this for boards
+		such as the Nucleo-F767ZI whose LED is active high.
+
 config MYHELLO_STACKSIZE
 	int "Stack size"
 	default DEFAULT_TASK_STACKSIZE
